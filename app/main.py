@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from app.routers import mail, map, payment, checkPayment
 from fastapi.middleware.cors import CORSMiddleware
 
+app = FastAPI()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # or your domain
@@ -10,7 +12,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app = FastAPI()
 
 # Include routers
 app.include_router(mail.router, prefix="/api", tags=["Mail"])
