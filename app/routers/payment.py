@@ -28,20 +28,21 @@ response_pending = {
 }
 
 
-async def event_stream(order_id: int):
+async def event_stream(order_id: str):
     while True:
         # Query the latest payment status for the user
-        response = supabase.table("phonepe").select("*").eq('merchantTransactionId', order_id).limit(1).execute()
-        print(response)
+        response = supabase.table("payu_webhook_response").select("*").eq('udf1', order_id).limit(1).execute()
+        # print(response)
         if response.data:
-            decoded_bytes = base64.b64decode(response.data[0].get("response"))
-            json_response = decoded_bytes.decode('utf-8')
-            json_data = json.loads(json_response)
-        if response.data and json_data["data"]["state"] == "COMPLETED":
+            # decoded_bytes = base64.b64decode(response.data[0].get("response"))
+            # json_response = decoded_bytes.decode('utf-8')
+            data=response.data[0]
+            json_data = data
+        if response.data and json_data["status"] == "success":
             yield f"data: {json.dumps(response_success)}\n\n"
             break
             await asyncio.sleep(10)
-        elif response.data and json_data["data"]["state"] == "FAILED":
+        elif response.data and json_data["status"] == "failure":
             yield f"data: {json.dumps(response_failed)}\n\n"
             break
             await asyncio.sleep(10)
@@ -51,5 +52,5 @@ async def event_stream(order_id: int):
 
 
 @router.post("/checkPayment")
-async def checkPayment(order_id: int):
+async def checkPayment(order_id: str):
     return StreamingResponse(event_stream(order_id), media_type="text/event-stream")
